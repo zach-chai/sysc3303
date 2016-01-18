@@ -49,6 +49,8 @@ public class Server {
       // Process the received datagram.
       System.out.println("Server: Packet received:");
       int len = receivePacket.getLength();
+      
+      System.out.println(this.checkValidity(data));
 
       // Form a String from the byte array.
       String received = new String(data,0,len);   
@@ -74,6 +76,39 @@ public class Server {
       // We're finished, so close the sockets.
       sendSocket.close();
       receiveSocket.close();
+   }
+   
+   private boolean checkValidity(byte[] data) {
+	   if(data[0] != 0) {
+		   System.out.println("fail1");
+		   return false;
+	   }
+	   if(!(data[1] == 1 || data[1] == 2)) {
+		   System.out.println("fail2");
+		   return false;
+	   }
+	   if (data[data.length - 1] != 0) {
+		   System.out.println("fail3");
+		   return false;
+	   }
+	   byte dest[] = new byte[data.length - 3];
+	   System.arraycopy(data, 2, dest, 0, dest.length);
+	   
+//	   int count = 0;
+//	   int index = -1;
+//	   for(int i = 0; i < dest.length; ++i) {
+//		   if(dest[i] == 0) {
+//			   ++count;
+//			   index = i;
+//		   }
+//	   }
+//	   System.out.println("count: " + count + "index: " + index);
+//	   
+//	   if(count == 1 && index > 0 && index < dest.length - 1)
+//		   return true;
+//	   else
+//		   return false;
+	   return true;
    }
 
    public static void main( String args[] )

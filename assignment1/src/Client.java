@@ -20,11 +20,21 @@ public class Client {
 	public void sendAndReceive()
 	{
 
-		String s = "random text";
-		System.out.println("Client: sending a packet containing:\n" + s);
+		String fileNameString = "test.txt";
 
 
-		byte msg[] = s.getBytes();
+		byte read[] = new byte[] {0,1};
+		byte write[] = new byte[] {0,2};
+		byte mode[] = "netascii".getBytes();
+		byte firstHalf[] = this.concatBytes(read, fileNameString.getBytes());
+		byte secondHalf[] = new byte[mode.length + 2];
+		secondHalf[0] = 0;
+		secondHalf[mode.length - 1] = 0;
+		System.arraycopy(mode, 0, secondHalf, 1, mode.length);
+		
+		byte msg[] = this.concatBytes(firstHalf, secondHalf);
+
+		System.out.println("Client: sending a packet containing:\n Bytes: " + msg + "\n String: " + new String(msg,0,msg.length));
 
 		try {
 			sendPacket = new DatagramPacket(msg, msg.length,
@@ -34,13 +44,9 @@ public class Client {
 			System.exit(1);
 		}
 
-		System.out.println("Client: Sending packet:");
 		System.out.println("To host: " + sendPacket.getAddress());
 		System.out.println("Destination host port: " + sendPacket.getPort());
 		int len = sendPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Containing: ");
-		System.out.println(new String(sendPacket.getData(),0,len)); // or could print "s"
 
 		// Send the datagram packet to the server via the send/receive socket. 
 		try {
@@ -79,6 +85,13 @@ public class Client {
 
 		// We're finished, so close the socket.
 		sendReceiveSocket.close();
+	}
+	
+	private byte[] concatBytes(byte[] a, byte[] b) {
+		byte[] dest = new byte[a.length + b.length];
+		System.arraycopy(a, 0, dest, 0, a.length);
+		System.arraycopy(b, 0, dest, a.length, b.length);
+		return dest;
 	}
 
 	public static void main(String args[])
