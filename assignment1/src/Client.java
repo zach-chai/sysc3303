@@ -31,7 +31,7 @@ public class Client {
 		secondHalf[0] = 0;
 		secondHalf[mode.length - 1] = 0;
 		System.arraycopy(mode, 0, secondHalf, 1, mode.length);
-		
+
 		byte msg[] = this.concatBytes(firstHalf, secondHalf);
 
 		System.out.println("Client: sending a packet containing:\n Bytes: " + msg + "\n String: " + new String(msg,0,msg.length));
@@ -86,7 +86,7 @@ public class Client {
 		// We're finished, so close the socket.
 		sendReceiveSocket.close();
 	}
-	
+
 	private byte[] concatBytes(byte[] a, byte[] b) {
 		byte[] dest = new byte[a.length + b.length];
 		System.arraycopy(a, 0, dest, 0, a.length);
