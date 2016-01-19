@@ -1,6 +1,7 @@
 
 import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 
 public class Client {
 
@@ -21,69 +22,105 @@ public class Client {
 	{
 
 		String fileNameString = "test.txt";
+		final byte read[] = new byte[] {0,1};
+		final byte write[] = new byte[] {0,2};
+		int requestType = 1;
+
+		for(int i = 0; i < 11; ++i) {
+			byte request[];
+			int requestInt;
+			String requestString;
+			
+			if(i == 10) {
+				requestType = 5;
+			}
+			
+
+			if(requestType == 1) {
+				request = read;
+				requestInt = 01;
+				requestString = "read";
+				requestType = 2;
+			} else if(requestType == 2) {
+				request = write;
+				requestInt = 02;
+				requestString = "write";
+				requestType = 1;
+			} else {
+				request = new byte[] {0,5};
+				requestInt = 05;
+				requestString = "invalid";
+			}
+
+			byte mode[] = "netascii".getBytes();
+			byte firstHalf[] = this.concatBytes(request, fileNameString.getBytes());
+			byte secondHalf[] = new byte[mode.length + 2];
+			secondHalf[0] = 0;
+			secondHalf[mode.length - 1] = 0;
+			System.arraycopy(mode, 0, secondHalf, 1, mode.length);
+
+			byte msg[] = this.concatBytes(firstHalf, secondHalf);
+
+			System.out.println("Client: sending a packet containing:");
+			System.out.println("Request as String: " + requestString +
+					" Request as bytes: 0" + requestInt);
+			System.out.println("FileName: " + new String(fileNameString));
+			System.out.println("Mode: " + new String(mode) + "\n");
 
 
-		byte read[] = new byte[] {0,1};
-		byte write[] = new byte[] {0,2};
-		byte mode[] = "netascii".getBytes();
-		byte firstHalf[] = this.concatBytes(read, fileNameString.getBytes());
-		byte secondHalf[] = new byte[mode.length + 2];
-		secondHalf[0] = 0;
-		secondHalf[mode.length - 1] = 0;
-		System.arraycopy(mode, 0, secondHalf, 1, mode.length);
+			try {
+				sendPacket = new DatagramPacket(msg, msg.length,
+						InetAddress.getLocalHost(), 68);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
 
-		byte msg[] = this.concatBytes(firstHalf, secondHalf);
+			System.out.println("To host: " + sendPacket.getAddress());
+			System.out.println("Destination host port: " + sendPacket.getPort());
+			int len = sendPacket.getLength();
 
-		System.out.println("Client: sending a packet containing:\n Bytes: " + msg + "\n String: " + new String(msg,0,msg.length));
+			// Send the datagram packet to the server via the send/receive socket. 
+			try {
+				sendReceiveSocket.send(sendPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
 
-		try {
-			sendPacket = new DatagramPacket(msg, msg.length,
-					InetAddress.getLocalHost(), 68);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			System.exit(1);
+			System.out.println("Client: Packet sent.\n");
+
+			// Construct a DatagramPacket for receiving packets up 
+			// to 100 bytes long (the length of the byte array).
+			byte data[] = new byte[100];
+			receivePacket = new DatagramPacket(data, data.length);
+
+			try {
+				// Block until a datagram is received via sendReceiveSocket.  
+				sendReceiveSocket.receive(receivePacket);
+			} catch(IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+
+			// Process the received datagram.
+			System.out.println("Client: Packet received:");
+			System.out.println("From host: " + receivePacket.getAddress());
+			System.out.println("Host port: " + receivePacket.getPort());
+			len = receivePacket.getLength();
+			System.out.println("Length: " + len);
+
+			byte bytes[] = new byte[len];
+			System.arraycopy(data, 0, bytes, 0, len);
+			System.out.print("Byte array: ");
+			for(byte b: bytes) {
+				System.out.print(b);
+			}
+			System.out.println("\n");
+			
+			
 		}
 
-		System.out.println("To host: " + sendPacket.getAddress());
-		System.out.println("Destination host port: " + sendPacket.getPort());
-		int len = sendPacket.getLength();
-
-		// Send the datagram packet to the server via the send/receive socket. 
-		try {
-			sendReceiveSocket.send(sendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		System.out.println("Client: Packet sent.\n");
-
-		// Construct a DatagramPacket for receiving packets up 
-		// to 100 bytes long (the length of the byte array).
-		byte data[] = new byte[100];
-		receivePacket = new DatagramPacket(data, data.length);
-
-		try {
-			// Block until a datagram is received via sendReceiveSocket.  
-			sendReceiveSocket.receive(receivePacket);
-		} catch(IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		// Process the received datagram.
-		System.out.println("Client: Packet received:");
-		System.out.println("From host: " + receivePacket.getAddress());
-		System.out.println("Host port: " + receivePacket.getPort());
-		len = receivePacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Containing: ");
-
-		// Form a String from the byte array.
-		String received = new String(data,0,len);   
-		System.out.println(received);
-
-		// We're finished, so close the socket.
 		sendReceiveSocket.close();
 	}
 

@@ -10,10 +10,6 @@ public class Server {
 	public Server()
 	{
 		try {
-			// Construct a datagram socket and bind it to any available 
-			// port on the local host machine. This socket will be used to
-			// send UDP Datagram packets.
-			sendSocket = new DatagramSocket();
 
 			// Construct a datagram socket and bind it to port 5000 
 			// on the local host machine. This socket will be used to
@@ -33,72 +29,85 @@ public class Server {
 		// Construct a DatagramPacket for receiving packets up 
 		// to 100 bytes long (the length of the byte array).
 
-		byte data[] = new byte[100];
-		receivePacket = new DatagramPacket(data, data.length);
-		System.out.println("Server: Waiting for Packet.\n");
+		byte data[];
 
-		// Block until a datagram packet is received from receiveSocket.
-		try {        
-			System.out.println("Waiting...");
-			receiveSocket.receive(receivePacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
+		while(true) {
+			data = new byte[100];
+			receivePacket = new DatagramPacket(data, data.length);
+			System.out.println("Server: Waiting for Packet.\n");
+
+			// Block until a datagram packet is received from receiveSocket.
+			try {        
+				System.out.println("Waiting...");
+				receiveSocket.receive(receivePacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+
+			// Process the received datagram.
+			System.out.println("Server: Packet received");
+			int len = receivePacket.getLength();
+
+			if(this.checkValidity(data, len)) {
+				System.out.println("Packet is a valid format");
+			} else {
+				System.err.println("Invalid Request");
+				System.exit(1);
+			}
+
+			// extract info
+			int requestInt = data[1];
+			String requestString = requestInt == 1 ? "read" : "write";
+			byte fileName[] = extractInfo(data, 2);
+			byte mode[] = extractInfo(data, fileName.length + 3);
+
+			System.out.println("Request as String: " + requestString +
+					" Request as bytes: 0" + requestInt);
+			System.out.println("FileName: " + new String(fileName));
+			System.out.println("Mode: " + new String(mode) + "\n");
+
+			len = 4;
+			if(requestInt == 1) {			
+				data = new byte[] {0, 3, 0, 1};
+				System.out.println("Response Info: " + "0301");
+			} else {
+				data = new byte[] {0, 4, 0, 0};
+				System.out.println("Response Info: " + "0400");
+			}
+
+			sendPacket = new DatagramPacket(data, len,
+					receivePacket.getAddress(), receivePacket.getPort());
+
+			try {
+				sendSocket = new DatagramSocket();
+			} catch (SocketException e1) {
+				e1.printStackTrace();
+				System.exit(1);
+			}
+
+			System.out.println("Server: Sending packet:");
+			len = sendPacket.getLength();
+			System.out.println(new String(sendPacket.getData(),0,len));
+
+			// Send the datagram packet to the client via the send socket. 
+			try {
+				sendSocket.send(sendPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+
+			System.out.println("Server: packet sent");
+
+			sendSocket.close();
 		}
-
-		// Process the received datagram.
-		System.out.println("Server: Packet received:");
-		int len = receivePacket.getLength();
-		
-		// Form a String from the byte array.
-		String received = new String(data,0,len);
-		System.out.println(received + "\n");
-
-		if(this.checkValidity(data, len)) {
-			System.out.println("Packet is a valid format");
-		} else {
-			System.exit(1);
-		}
-		
-		// get request type
-		int request = data[1];
-		len = 4;
-		if(request == 1) {			
-			data = new byte[] {0, 3, 0, 1};
-		} else {
-			data = new byte[] {0, 4, 0, 0};
-		}
-		
-		String response = new String(data,0,len);
-		System.out.println(response + "\n");
-		System.out.println(data);
-
-		sendPacket = new DatagramPacket(data, len,
-				receivePacket.getAddress(), receivePacket.getPort());
-
-		System.out.println("Server: Sending packet:");
-		len = sendPacket.getLength();
-		System.out.println(new String(sendPacket.getData(),0,len));
-
-		// Send the datagram packet to the client via the send socket. 
-		try {
-			sendSocket.send(sendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		System.out.println("Server: packet sent");
-
-		// We're finished, so close the sockets.
-		sendSocket.close();
-		receiveSocket.close();
 	}
 
 	private boolean checkValidity(byte[] data, int len) {
 		byte msg[] = new byte[len];
 		System.arraycopy(data, 0, msg, 0, len);
-		
+
 		if(msg[0] != 0) {
 			return false;
 		}
@@ -124,6 +133,21 @@ public class Server {
 			return true;
 		else
 			return false;
+	}
+
+	private byte[] extractInfo(byte[] data, int startPos) {
+		int index = 0;
+		for(int i = startPos; i < data.length; ++i) {
+			if(data[i] == 0) {
+				index = i;
+				break;
+			}
+		}
+
+		byte[] dest = new byte[index - startPos];
+		System.arraycopy(data, startPos, dest, 0, dest.length);
+
+		return dest;
 	}
 
 	public static void main( String args[] )
