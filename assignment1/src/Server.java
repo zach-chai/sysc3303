@@ -24,7 +24,7 @@ public class Server {
 		} 
 	}
 
-	public void receiveAndEcho()
+	public void receiveAndRespond()
 	{
 		// Construct a DatagramPacket for receiving packets up 
 		// to 100 bytes long (the length of the byte array).
@@ -34,10 +34,9 @@ public class Server {
 		while(true) {
 			data = new byte[100];
 			receivePacket = new DatagramPacket(data, data.length);
-			System.out.println("Server: Waiting for Packet.\n");
 
 			// Block until a datagram packet is received from receiveSocket.
-			try {        
+			try {
 				System.out.println("Waiting...");
 				receiveSocket.receive(receivePacket);
 			} catch (IOException e) {
@@ -45,13 +44,10 @@ public class Server {
 				System.exit(1);
 			}
 
-			// Process the received datagram.
-			System.out.println("Server: Packet received");
 			int len = receivePacket.getLength();
 
-			if(this.checkValidity(data, len)) {
-				System.out.println("Packet is a valid format");
-			} else {
+			// Process the received datagram.
+			if(!this.checkValidity(data, len)) {
 				System.err.println("Invalid Request");
 				System.exit(1);
 			}
@@ -62,18 +58,19 @@ public class Server {
 			byte fileName[] = extractInfo(data, 2);
 			byte mode[] = extractInfo(data, fileName.length + 3);
 
-			System.out.println("Request as String: " + requestString +
-					" Request as bytes: 0" + requestInt);
+			System.out.println("Request as String: " + requestString);
+			System.out.println("Request as bytes: 0" + requestInt);
 			System.out.println("FileName: " + new String(fileName));
 			System.out.println("Mode: " + new String(mode) + "\n");
 
+			// create response
 			len = 4;
 			if(requestInt == 1) {			
 				data = new byte[] {0, 3, 0, 1};
-				System.out.println("Response Info: " + "0301");
+				System.out.println("Response Info: " + "0301\n");
 			} else {
 				data = new byte[] {0, 4, 0, 0};
-				System.out.println("Response Info: " + "0400");
+				System.out.println("Response Info: " + "0400\n");
 			}
 
 			sendPacket = new DatagramPacket(data, len,
@@ -86,10 +83,6 @@ public class Server {
 				System.exit(1);
 			}
 
-			System.out.println("Server: Sending packet:");
-			len = sendPacket.getLength();
-			System.out.println(new String(sendPacket.getData(),0,len));
-
 			// Send the datagram packet to the client via the send socket. 
 			try {
 				sendSocket.send(sendPacket);
@@ -97,8 +90,6 @@ public class Server {
 				e.printStackTrace();
 				System.exit(1);
 			}
-
-			System.out.println("Server: packet sent");
 
 			sendSocket.close();
 		}
@@ -153,6 +144,6 @@ public class Server {
 	public static void main( String args[] )
 	{
 		Server c = new Server();
-		c.receiveAndEcho();
+		c.receiveAndRespond();
 	}
 }

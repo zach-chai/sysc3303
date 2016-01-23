@@ -12,7 +12,7 @@ public class Client {
 	{
 		try {
 			sendReceiveSocket = new DatagramSocket();
-		} catch (SocketException se) {   // Can't create the socket.
+		} catch (SocketException se) {
 			se.printStackTrace();
 			System.exit(1);
 		}
@@ -61,9 +61,8 @@ public class Client {
 
 			byte msg[] = this.concatBytes(firstHalf, secondHalf);
 
-			System.out.println("Client: sending a packet containing:");
-			System.out.println("Request as String: " + requestString +
-					" Request as bytes: 0" + requestInt);
+			System.out.println("Request as String: " + requestString);
+			System.out.println("Request as bytes: 0" + requestInt);
 			System.out.println("FileName: " + new String(fileNameString));
 			System.out.println("Mode: " + new String(mode) + "\n");
 
@@ -76,10 +75,6 @@ public class Client {
 				System.exit(1);
 			}
 
-			System.out.println("To host: " + sendPacket.getAddress());
-			System.out.println("Destination host port: " + sendPacket.getPort());
-			int len = sendPacket.getLength();
-
 			// Send the datagram packet to the server via the send/receive socket. 
 			try {
 				sendReceiveSocket.send(sendPacket);
@@ -88,10 +83,7 @@ public class Client {
 				System.exit(1);
 			}
 
-			System.out.println("Client: Packet sent.\n");
-
-			// Construct a DatagramPacket for receiving packets up 
-			// to 100 bytes long (the length of the byte array).
+			// Construct a DatagramPacket for receiving packets
 			byte data[] = new byte[100];
 			receivePacket = new DatagramPacket(data, data.length);
 
@@ -104,21 +96,15 @@ public class Client {
 			}
 
 			// Process the received datagram.
-			System.out.println("Client: Packet received:");
-			System.out.println("From host: " + receivePacket.getAddress());
-			System.out.println("Host port: " + receivePacket.getPort());
-			len = receivePacket.getLength();
-			System.out.println("Length: " + len);
+			int len = receivePacket.getLength();
 
 			byte bytes[] = new byte[len];
 			System.arraycopy(data, 0, bytes, 0, len);
-			System.out.print("Byte array: ");
+			System.out.print("Response byte array: ");
 			for(byte b: bytes) {
 				System.out.print(b);
 			}
 			System.out.println("\n");
-			
-			
 		}
 
 		sendReceiveSocket.close();

@@ -26,18 +26,15 @@ public class IntermediateHost {
 		while(true) {
 			data = new byte[100];
 			receivePacket = new DatagramPacket(data, data.length);
-			System.out.println("Intermediate Host: Waiting for Packet.\n");
 
-			try {        
-				System.out.println("Waiting..."); // so we know we're waiting
+			try {
+				System.out.println("Waiting...");
 				receiveSocket.receive(receivePacket);
 			} catch (IOException e) {
 				System.out.println("Receive Socket Timed Out.\n" + e);
 				e.printStackTrace();
 				System.exit(1);
 			}
-
-			System.out.println("Intermediate Host: Packet received");
 
 			InetAddress clientAddress = receivePacket.getAddress();
 			int clientPort = receivePacket.getPort();
@@ -49,8 +46,9 @@ public class IntermediateHost {
 			byte fileName[] = extractInfo(data, 2);
 			byte mode[] = extractInfo(data, fileName.length + 3);
 
-			System.out.println("Request as String: " + requestString +
-					" Request as bytes: 0" + requestInt);
+			System.out.println("Intermediate Host: Sending packet to server:");
+			System.out.println("Request as String: " + requestString);
+			System.out.println("Request as bytes: 0" + requestInt);
 			System.out.println("FileName: " + new String(fileName));
 			System.out.println("Mode: " + new String(mode) + "\n");
 
@@ -63,9 +61,6 @@ public class IntermediateHost {
 			}
 
 			String relayData = new String(data,0,len);   
-			System.out.println( "Intermediate Host: Sending packet:");
-			System.out.println(relayData + "\n");
-
 
 			receivePacket = new DatagramPacket(data, data.length);
 
@@ -84,18 +79,18 @@ public class IntermediateHost {
 				System.exit(1);
 			}
 
-			System.out.println("Intermediate Host: Packet received");
+			System.out.println("Intermediate Host: Sending packet to client:");
 
 			len = receivePacket.getLength();
-			relayData = new String(data,0,len);   
-			System.out.println("Intermediate Host: Sending packet:");
-			System.out.println(relayData + "\n");
+			byte bytes[] = new byte[len];
+			System.arraycopy(data, 0, bytes, 0, len);
+			for(byte b: bytes) {
+				System.out.print(b);
+			}
+			System.out.println("\n");
 
 			sendPacket = new DatagramPacket(data, len,
 					clientAddress, clientPort);
-
-			len = sendPacket.getLength();
-			System.out.println(new String(sendPacket.getData(),0,len));
 
 			// Send the datagram packet to the client via the send socket. 
 			try {
