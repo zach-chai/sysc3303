@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Table {
 
-	static final int MAX_SANDWICHES = 10;
+	static final int MAX_SANDWICHES = 20;
 	private static Table instance;
 	private ArrayList<Ingredient> ingredients;
 	static final int MAX_SIZE = 2;
@@ -39,7 +39,6 @@ public class Table {
 
 	public synchronized void useIngredients(Ingredient lastIngredient) {
 		while((ingredients.size() < MAX_SIZE || !canUseIngredients(lastIngredient)) && !finished()) {
-			System.out.println(getSandwiches());
 			try {
 				wait();
 			} catch (InterruptedException e) {
