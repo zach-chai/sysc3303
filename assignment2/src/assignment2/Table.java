@@ -30,7 +30,7 @@ public class Table {
 			}
 		}
 
-		if (!finished()) {
+		if (!finished() && (ingredients.isEmpty() || ingredients.get(0) != newIngredient)) {
 			ingredients.add(newIngredient);
 		}
 
@@ -50,6 +50,7 @@ public class Table {
 			ingredients.clear();
 			System.out.println("Chef: used " + lastIngredient + " to make and eat sandwich");
 			incrementSandwiches();
+			System.out.println(this.getSandwiches());
 		}
 		notifyAll();
 	}
